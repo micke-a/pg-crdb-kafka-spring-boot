@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15432/mydatabase
+    username: myuser
+    password: secret
+  docker:
+    compose:
+      enabled: true
+      file:
+        - postgres-compose.yaml
+        - kafka-compose.yaml
+  jpa:
+    hibernate:
+      ddl-auto: create

@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15432/mydatabase?sslmode=disable
+    username: myuser
+    password:
+  docker:
+    compose:
+      enabled: true
+      file:
+        - crdb-compose.yaml
+        - kafka-compose.yaml
+  jpa:
+    hibernate:
+      ddl-auto: create

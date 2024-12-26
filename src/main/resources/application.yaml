@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: cockroachdb
+  kafka:
+    bootstrap-servers: localhost:9092
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      transaction-id-prefix: kafka-tx-
+
+    consumer:
+      group-id: ${spring.application.name}-group
+      auto-offset-reset: earliest
+      properties:
+        isolation.level: read_committed
+
+  logging:
+    level:
+      root: info
+      me.mikael: debug
+      org.springframework.transaction: trace
+      org.springframework.kafka.transaction: debug
+
+app:
+  kafka:
+    customer-topic-name: me-mikael-cockroachdb-customer
+    activity-topic-name: me-mikael-cockroachdb-activity

@@ -1,0 +1,12 @@
+### GET request to example server
+# https://www.jetbrains.com/help/idea/exploring-http-syntax.html#dynamic-variables
+GET http://localhost:8080/api/customer/list
+
+### GET to create customer
+< {%
+    let birthday = new Date();
+    birthday.setFullYear($random.integer()%10 + 1900, $random.integer()%12, $random.integer()%31);
+    client.log(`birthday is ${birthday}`)
+    request.variables.set("birthday", birthday.toLocaleDateString())
+%}
+GET http://localhost:8080/api/customer/create?name={{$random.uuid}}&birthday={{birthday}}

@@ -1,0 +1,33 @@
+version: '3.5'
+services:
+  database:
+    image: cockroachdb/cockroach:v24.2.5
+    ports:
+      - "15432:26257"
+      - "8181:8080" # web ui
+    command: start-single-node --insecure
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health?ready=1" ] # port 8080 since it runs in the container
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    networks:
+      - roachnet
+#    volumes:
+#      - "${PWD}/cockroach-data/crdb:/cockroach/cockroach-data"
+
+  crdb-init:
+    image: cockroachdb/cockroach:v24.2.5
+    networks:
+      - roachnet
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./crdb_setup.sh:/crdb_setup.sh
+    entrypoint: "/bin/bash"
+    command: "/crdb_setup.sh"
+    #  setting or updating a password is not supported in insecure mode -> remove WITH PASSWORD from user creation
+#    command: /cockroach/cockroach.sh sql --insecure --host=database -e "CREATE DATABASE mydatabase; CREATE USER myuser; GRANT ALL ON DATABASE mydatabase TO myuser;"
+networks:
+  roachnet:
