@@ -3,19 +3,21 @@ spring:
     name: cockroachdb
   kafka:
     bootstrap-servers: localhost:9092
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       transaction-id-prefix: kafka-tx-
+      properties:
+        schema.registry.url: http://schemaregistry:8081
 
     consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
       properties:
         isolation.level: read_committed
+        schema.registry.url: http://schemaregistry:8081
 
   logging:
     level:

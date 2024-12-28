@@ -22,6 +22,11 @@ Compose file has an `init-crdb` service which
 See
 - https://stackoverflow.com/questions/45884185/cockroachdb-docker-compose-script-with-sql-commands
 
+## Things interesting to outbox functionality
+
+- https://blog.cloudneutral.se/cdc-transformations-and-the-outbox-pattern-with-cockroachdb
+- 
+
 
 # PostgreSQL
 
@@ -41,6 +46,9 @@ When Customer is created the following happens
 
 
 # Kafka
+
+For inspiration, this has the lots https://github.com/confluentinc/cp-all-in-one/blob/7.8.0-post/cp-all-in-one/docker-compose.yml 
+
 
 ## Transactions
 
