@@ -49,9 +49,78 @@ When Customer is created the following happens
 
 For inspiration, this has the lots https://github.com/confluentinc/cp-all-in-one/blob/7.8.0-post/cp-all-in-one/docker-compose.yml 
 
+## Thoughts Kafka EOS
+EOS = In Kafka means, in my mind at least, transactional publish and consumption of events
+
+### Can we rely on Kafka EOS?
+
+MyServiceA leverages Spring Transaction managers working across both Kafka and Database interactions.
+
+We have:
+- External Webhook event
+- MyServiceA
+  - Publishes events to Kafka
+  - Kafka configured to use EOS semantics
+  - Writes to database
+- MyServiceB
+  - Only consuming Kafka Events
+  - Kafka configured to use EOS semantics (read_committed)
+- Downstream Services (including MyServiceB) pick-up Kafka events
+  - Don't really care what they do, can just advice them to use EOS
+
+```mermaid
+sequenceDiagram
+  box Purple Webhook Event Processing
+    participant MyServiceA
+    participant WebhookEmitter
+    participant MyDatabase
+  end
+
+  box Gray Infrastructure
+    participant KafkaBroker
+  end
+  box Blue Domain Event Processing
+    participant MyServiceB
+  end
+    
+  WebhookEmitter->>MyServiceA: WebhookEvent
+  MyServiceA->>MyServiceA: Idempotency Check
+  MyServiceA->>MyDatabase: Save to DB
+  MyServiceA--)KafkaBroker: Publish Event to Topic1
+  MyServiceA--)KafkaBroker: Publish Event to Topic2
+  MyServiceA->>WebhookEmitter: Response
+  KafkaBroker-->>MyServiceB: Topic1 Event
+  MyServiceB-->>MyServiceB: Retry Topic1 Event
+  KafkaBroker-->>OtherSerivces: Topic1 Event
+
+```
+#### WebhookEvent ordering part 1 - webhook event consumer
+Unrelated to EOS, but event ordering needs to be taken into consideration.
+Most Webhook event producers do not guarantee ordering.
+
+We either
+- Make it clear to consumers that events may arrive out-of-order
+- Or deal with re-ordering in MyServiceA, something which is not trivial
+
+#### Out of order events part 2 - downstream consumers
+Even though Kafka using partitions keys guarantee ordering, things get problematic when triage and/or recovery topics are used.
+
+Each consuming service has to deal with out-of-order events themselves if they are using triage and/or recovery topics. 
+Therefore, events must contain enough information to allow downstream consumers to determine ordering of events. 
+
+#### WebhookEvent emitter sends duplicate events
+
+Things which could cause it to send duplicates
+- General network issues
+- Client timeout due to MyServiceA being slow
+
+To guard against this the WebhookProcessor (MyServiceA) would need a robust idempotency check
+
 
 ## Transactions
 
+- At Least Once, Exactly Once etc.
+  - https://kafka.apache.org/documentation/#semantic
 - https://docs.spring.io/spring-kafka/reference/kafka/transactions.html
 - https://www.confluent.io/blog/transactions-apache-kafka/
 - https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/
@@ -59,6 +128,12 @@ For inspiration, this has the lots https://github.com/confluentinc/cp-all-in-one
 - https://docs.google.com/document/d/1LhzHGeX7_Lay4xvrEXxfciuDWATjpUXQhrEIkph9qRE/edit?tab=t.0#heading=h.beexgkt7kkor
 - https://raphaeldelio.medium.com/chaining-kafka-and-database-transactions-with-spring-boot-an-in-depth-look-2a7e0e4fe57c
   - Pretty good explainer
+
+
+```
+ Also beginning with 0.11.0.0, the producer supports the ability to send messages to multiple topic partitions using transaction-like semantics: i.e. either all messages are successfully written or none of them are. The main use case for this is exactly-once processing between Kafka topics (described below).
+```
+- https://kafka.apache.org/documentation/#semantics
 
 ### Config
 Ensure that the Kafka producer factory is created in such a way that it has transactional capabilities.

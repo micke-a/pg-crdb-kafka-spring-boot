@@ -6,9 +6,13 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # This is the main bit signalling transactionality
       transaction-id-prefix: kafka-tx-
       properties:
         schema.registry.url: http://schemaregistry:8081
+      # to ensure that the producer waits for all replicas to acknowledge the write before considering it successful
+      acks: all
+      retries: 3
 
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
