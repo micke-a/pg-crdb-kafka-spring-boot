@@ -9,7 +9,7 @@ spring:
       # This is the main bit signalling transactionality
       transaction-id-prefix: kafka-tx-
       properties:
-        schema.registry.url: http://schemaregistry:8081
+        schema.registry.url: http://localhost:8081
       # to ensure that the producer waits for all replicas to acknowledge the write before considering it successful
       acks: all
       retries: 3
@@ -21,7 +21,7 @@ spring:
       auto-offset-reset: earliest
       properties:
         isolation.level: read_committed
-        schema.registry.url: http://schemaregistry:8081
+        schema.registry.url: http://localhost:8081
 
   logging:
     level:
